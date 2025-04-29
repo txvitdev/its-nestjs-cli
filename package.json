@@ -1,0 +1,35 @@
+{
+  "name": "its-nestjs-cli",
+  "version": "1.0.0",
+  "description": "Its nestjs cli",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "prepare": "npm run build",
+    "its-cli": "node dist/index.js"
+  },
+  "bin": {
+    "its-cli": "./dist/index.js"
+  },
+  "keywords": [],
+  "author": "Jasper (aka TXV)",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "execa": "^9.5.2",
+    "inquirer": "^12.6.0",
+    "its-nestjs-cli": "file:",
+    "ora": "^8.2.0"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^22.15.3",
+    "prettier": "^3.5.3",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3"
+  }
+}
