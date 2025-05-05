@@ -1,11 +1,9 @@
 import chalk from 'chalk'
 import inquirer from 'inquirer'
-import path from 'path'
 import { SetupDbService } from '../services/setup/setup.service'
 import ora from 'ora'
 import { SetupSqlService } from '../services/setup/setup-sql.service'
 import { SetupNoSqlService } from '../services/setup/setup-nosql.service'
-import { delay } from '../utils/utils'
 
 export async function initialization() {
   console.log(
@@ -32,7 +30,7 @@ export async function initialization() {
     },
   ])
 
-  const outputPath = path.join(process.cwd(), 'src', 'database')
+  // const outputPath = path.join(process.cwd(), 'src', 'database')
 
   let setupDbService: SetupDbService
 
@@ -45,14 +43,17 @@ export async function initialization() {
   try {
     if (await setupDbService.installPackages([])) {
       await setupDbService.setupEnv()
+      await setupDbService.setupDbModule()
+      await setupDbService.setupDbConfig()
+      await setupDbService.setupModel()
+      await setupDbService.importModule({})
     }
-    // await setupDbService.setupEnv([])
-    // await setupDbService.setupDbConfig('')
-    // await setupDbService.setupDbModule('')
 
-    // spinner.succeed('Everything done')
+    return
   } catch (error) {
-    // spinner.fail('Fail!!')
+    console.error('An error occurred during initialization:', error)
+    spinner.fail()
+    return
   }
 }
 

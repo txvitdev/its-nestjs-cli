@@ -1,0 +1,23 @@
+import { Expose } from 'class-transformer'
+import {
+  CreateDateColumn,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm'
+
+export class BaseEntity<T> {
+  @PrimaryGeneratedColumn('increment')
+  id: number
+
+  @Expose({ name: 'created_at' })
+  @CreateDateColumn({ name: 'created_at', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date
+
+  @Expose({ name: 'updated_at' })
+  @UpdateDateColumn({ name: 'updated_at', default: () => 'CURRENT_TIMESTAMP' })
+  updatedAt: Date
+
+  constructor(partial?: Partial<T>) {
+    Object.assign(this, partial)
+  }
+}

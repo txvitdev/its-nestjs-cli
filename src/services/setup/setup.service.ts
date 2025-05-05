@@ -19,6 +19,7 @@ export interface ISetupDbService {
     moduleName: string
     modulePath: string
   }): Promise<void>
+  setupModel(destinationPath: string, sourcePath: string): Promise<void>
 }
 
 export class SetupDbService implements ISetupDbService {
@@ -52,6 +53,7 @@ export class SetupDbService implements ISetupDbService {
 
   async setupEnv(variables?: string[]): Promise<void> {
     this.spinner.start('Looking env file...\n')
+    await delay(500)
     try {
       const envPath = path.join(process.cwd(), '.env')
 
@@ -69,14 +71,16 @@ export class SetupDbService implements ISetupDbService {
       }
 
       fs.appendFileSync(envPath, content)
-
+      this.spinner.stop()
       console.log(chalk.green('Updated .env'))
     } catch (error) {
+      this.spinner.stop()
       console.error('Error when update env file: ', error)
     }
-    this.spinner.stop()
   }
-  async setupDbConfig(configPath: string): Promise<void> {
+
+  // Setup db config
+  async setupDbConfig(configPath?: string): Promise<void> {
     this.spinner.start('Generate database config file ... \n')
     await delay(500)
     try {
@@ -87,14 +91,16 @@ export class SetupDbService implements ISetupDbService {
         'src/config/database.config.ts',
       )
       fs.outputFileSync(outputPath, content)
+      this.spinner.stop()
       console.log(chalk.green(`Updated src/config/database.config.ts`))
     } catch (error) {
+      this.spinner.stop()
       console.error('Error when read template config database file: ', error)
     }
-    this.spinner.stop()
   }
 
-  async setupDbModule(configPath: string): Promise<void> {
+  // Set up database module
+  async setupDbModule(configPath?: string): Promise<void> {
     this.spinner.start('Generate database module file ... \n')
     await delay(500)
     try {
@@ -106,18 +112,21 @@ export class SetupDbService implements ISetupDbService {
       const content = fs.readFileSync(configPath, { encoding: 'utf8' })
 
       fs.outputFileSync(modulePath, content)
+      this.spinner.stop()
       console.log(chalk.green(`Updated src/database/database.module.ts`))
     } catch (error) {
+      this.spinner.stop()
       console.error('Error when create database module: ', error)
     }
-    this.spinner.stop()
   }
+
+  // Import module to app module
   async importModule({
     moduleName,
     modulePath,
   }: {
-    moduleName: string
-    modulePath: string
+    moduleName?: string
+    modulePath?: string
   }): Promise<void> {
     try {
       const project = new Project({
@@ -151,6 +160,23 @@ export class SetupDbService implements ISetupDbService {
       project.saveSync()
     } catch (error) {
       throw new Error(chalk.red('Error when importing module: ' + error))
+    }
+  }
+
+  async setupModel(
+    destinationPath?: string,
+    sourcePath?: string,
+  ): Promise<void> {
+    this.spinner.start(`Setting up ${destinationPath} ... \n`)
+    await delay(500)
+    try {
+      const content = fs.readFileSync(sourcePath, { encoding: 'utf8' })
+      fs.outputFileSync(path.join(process.cwd(), destinationPath), content)
+      this.spinner.stop()
+      console.log(chalk.green(`Updated ${destinationPath}`))
+    } catch (error) {
+      this.spinner.stop()
+      console.error('Error when setting up model: ', error)
     }
   }
 }
