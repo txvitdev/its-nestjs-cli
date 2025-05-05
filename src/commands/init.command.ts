@@ -1,8 +1,11 @@
 import chalk from 'chalk'
 import inquirer from 'inquirer'
 import path from 'path'
-import { dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { SetupDbService } from '../services/setup/setup.service'
+import ora from 'ora'
+import { SetupSqlService } from '../services/setup/setup-sql.service'
+import { SetupNoSqlService } from '../services/setup/setup-nosql.service'
+import { delay } from '../utils/utils'
 
 export async function initialization() {
   console.log(
@@ -29,20 +32,32 @@ export async function initialization() {
     },
   ])
 
-  const dirname = path.dirname(fileURLToPath(import.meta.url))
-
-  console.log(dirname)
-
   const outputPath = path.join(process.cwd(), 'src', 'database')
 
-  console.log(outputPath)
+  let setupDbService: SetupDbService
 
-  switch (dbType) {
-    case 'sql':
-      break
-    case 'nosql':
-      break
-    default:
-      break
+  const spinner = ora()
+  setupDbService =
+    dbType === 'sql'
+      ? new SetupSqlService(spinner)
+      : new SetupNoSqlService(spinner)
+
+  try {
+    if (await setupDbService.installPackages([])) {
+      await setupDbService.setupEnv()
+    }
+    // await setupDbService.setupEnv([])
+    // await setupDbService.setupDbConfig('')
+    // await setupDbService.setupDbModule('')
+
+    // spinner.succeed('Everything done')
+  } catch (error) {
+    // spinner.fail('Fail!!')
   }
+}
+
+export async function test() {
+  const setup = new SetupDbService(ora())
+
+  await setup.installPackages(['@nestjs/typeorm', 'typeorm'])
 }
