@@ -21,50 +21,25 @@ export class SetupSqlService extends SetupDbService {
     await super.setupEnv(variables)
   }
 
+  async setupDbFolder(): Promise<void> {
+    const sourceDir = path.join(Dirname, 'template/database/sql/database')
+    await super.setupDbFolder(sourceDir)
+  }
+
+  async setupScript(): Promise<void> {
+    await super.setupScript()
+  }
+
   async setupDbConfig(): Promise<void> {
-    const configPath = path.join(
-      Dirname,
-      'template/database/sql/config/database.config.ts.template',
+    await super.setupDbConfig(
+      path.join(
+        Dirname,
+        'template/database/sql/config/database.config.ts.template',
+      ),
     )
-
-    await super.setupDbConfig(configPath)
   }
 
-  async setupDbModule(): Promise<void> {
-    const modulePath = path.join(
-      Dirname,
-      'template/database/sql/database/database.module.ts.template',
-    )
-
-    await super.setupDbModule(modulePath)
-    await this.setupDbSourceOptionsFile()
-  }
-
-  async setupDbSourceOptionsFile(): Promise<void> {
-    try {
-      const dbDestinationPath = path.join(
-        process.cwd(),
-        'src/database/database.ts',
-      )
-
-      const contentTemplate = fs.readFileSync(
-        path.join(
-          Dirname,
-          'template/database/sql/database/database.ts.template',
-        ),
-        {
-          encoding: 'utf8',
-        },
-      )
-
-      fs.outputFileSync(dbDestinationPath, contentTemplate)
-      console.log(chalk.green('Created database.ts file successfully'))
-    } catch (error) {
-      console.error(chalk.red('Error when create database.ts file: ' + error))
-    }
-  }
-
-  async setupModel(destinationPath: string): Promise<void> {
+  async setupModel(): Promise<void> {
     await super.setupModel(
       'src/modules/base.entity.ts',
       path.join(

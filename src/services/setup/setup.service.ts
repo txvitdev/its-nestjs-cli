@@ -5,21 +5,11 @@ import { Project, ts } from 'ts-morph'
 import inquirer from 'inquirer'
 import { Ora } from 'ora'
 import { execSync } from 'child_process'
+import editJsonFile from 'edit-json-file'
 import { delay } from '../../utils/utils'
 
-export interface ISetupDbService {
-  installPackages(packages: string[]): Promise<boolean>
-  setupEnv(variables: string[]): Promise<void>
-  setupDbConfig(configPath: string): Promise<void>
-  setupDbModule(configPath: string): Promise<void>
-  importModule({
-    moduleName,
-    modulePath,
-  }: {
-    moduleName: string
-    modulePath: string
-  }): Promise<void>
-  setupModel(destinationPath: string, sourcePath: string): Promise<void>
+interface ISetupDbService {
+  setup(): Promise<void>
 }
 
 export class SetupDbService implements ISetupDbService {
@@ -27,7 +17,20 @@ export class SetupDbService implements ISetupDbService {
   constructor(spinner: Ora) {
     this.spinner = spinner
   }
-  async installPackages(packages: string[]): Promise<boolean> {
+
+  async setup(): Promise<void> {
+    if (await this.installPackages()) {
+      await this.setupDbFolder()
+      await this.setupDbConfig()
+      await this.setupEnv()
+      await this.setupScript()
+      await this.setupModel()
+      await this.importModule({})
+    }
+    return
+  }
+
+  protected async installPackages(packages?: string[]): Promise<boolean> {
     const installPackage = await inquirer.prompt([
       {
         type: 'confirm',
@@ -38,10 +41,8 @@ export class SetupDbService implements ISetupDbService {
 
     if (!installPackage.choice) return false
     try {
-      this.spinner.start('Install package')
+      this.spinner.start('Install package: ')
       const command = `pnpm install ${packages.join(' ')}`
-      console.log(command)
-
       execSync(command)
       this.spinner.stop()
       console.log(chalk.green('Installed packages successfully'))
@@ -51,7 +52,7 @@ export class SetupDbService implements ISetupDbService {
     }
   }
 
-  async setupEnv(variables?: string[]): Promise<void> {
+  protected async setupEnv(variables?: string[]): Promise<void> {
     this.spinner.start('Looking env file...\n')
     await delay(500)
     try {
@@ -79,49 +80,100 @@ export class SetupDbService implements ISetupDbService {
     }
   }
 
-  // Setup db config
-  async setupDbConfig(configPath?: string): Promise<void> {
-    this.spinner.start('Generate database config file ... \n')
+  protected async setupDbFolder(sourceDir?: string): Promise<void> {
+    this.spinner.start('Setup database folder...\n')
     await delay(500)
     try {
-      const content = await fs.readFile(configPath, { encoding: 'utf8' })
+      const targetDir = path.join(process.cwd(), 'src/database')
 
-      const outputPath = path.join(
-        process.cwd(),
-        'src/config/database.config.ts',
-      )
-      fs.outputFileSync(outputPath, content)
+      if (await fs.pathExists(targetDir)) {
+        console.error(chalk.red(`Folder ${targetDir} existed!!`))
+        process.exit(1)
+      }
+
+      await fs.copy(sourceDir, targetDir)
+
+      // Change tail name: from .template to .ts
+      const renameExtensions = async (dir) => {
+        const entries = await fs.readdir(dir)
+        for (const entry of entries) {
+          const fullPath = path.join(dir, entry)
+          const stats = await fs.stat(fullPath)
+          if (stats.isDirectory()) {
+            await renameExtensions(fullPath)
+          } else if (entry.endsWith('.template')) {
+            const newName = entry.replace(/\.template$/, '')
+            await fs.rename(fullPath, path.join(dir, newName))
+          }
+        }
+      }
+      await renameExtensions(targetDir)
+
       this.spinner.stop()
-      console.log(chalk.green(`Updated src/config/database.config.ts`))
+      console.log(chalk.green('Updated ./src/database folder'))
     } catch (error) {
       this.spinner.stop()
-      console.error('Error when read template config database file: ', error)
+      console.error('Error when update database folder: ', error)
     }
   }
 
-  // Set up database module
-  async setupDbModule(configPath?: string): Promise<void> {
-    this.spinner.start('Generate database module file ... \n')
+  protected async setupScript(): Promise<void> {
+    try {
+      const file = editJsonFile(path.join(process.cwd(), 'package.json'))
+      file.set('scripts.typeorm', 'ts-node ./node_modules/typeorm/cli')
+      file.set(
+        'scripts.migration:run',
+        'npm run typeorm migration:run -- -d ./src/database/database.js',
+      )
+      file.set(
+        'scripts.migration:rundev',
+        'npm run typeorm migration:run -- -d ./src/database/database.ts',
+      )
+      file.set(
+        'scripts.migration:generate',
+        'npm run build && cross-var npm run typeorm -- -d ./src/database/database.ts migration:generate ./src/database/migrations/$npm_config_name',
+      )
+      file.set(
+        'scripts.migration:create',
+        'npm run typeorm -- migration:create ./src/database/migrations/$npm_config_name',
+      )
+      file.set(
+        'scripts.migration:revert',
+        'npm run typeorm -- -d ./src/database/database.js migration:revert',
+      )
+      file.set(
+        'scripts.migration:revertdev',
+        'npm run typeorm -- -d ./src/database/database.ts migration:revert',
+      )
+
+      file.save()
+    } catch (error) {
+      console.error('Error when setting up script: ', error)
+    }
+  }
+
+  protected async setupDbConfig(configPath?: string): Promise<void> {
+    this.spinner.start('Updating database.config.ts file...\n')
     await delay(500)
     try {
-      const modulePath = path.join(
+      const targetPath = path.join(
         process.cwd(),
-        'src/database/database.module.ts',
+        'src/config/database.config.ts',
       )
 
       const content = fs.readFileSync(configPath, { encoding: 'utf8' })
 
-      fs.outputFileSync(modulePath, content)
+      fs.outputFileSync(targetPath, content)
       this.spinner.stop()
-      console.log(chalk.green(`Updated src/database/database.module.ts`))
+      console.log(chalk.green('Updated ./src/config/database.config.ts'))
     } catch (error) {
       this.spinner.stop()
-      console.error('Error when create database module: ', error)
+      console.error('Error when updating database config file: ', error)
     }
   }
 
   // Import module to app module
-  async importModule({
+  protected async importModule({
     moduleName,
     modulePath,
   }: {
@@ -163,7 +215,7 @@ export class SetupDbService implements ISetupDbService {
     }
   }
 
-  async setupModel(
+  protected async setupModel(
     destinationPath?: string,
     sourcePath?: string,
   ): Promise<void> {

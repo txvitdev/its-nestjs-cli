@@ -41,14 +41,7 @@ export async function initialization() {
       : new SetupNoSqlService(spinner)
 
   try {
-    if (await setupDbService.installPackages([])) {
-      await setupDbService.setupEnv()
-      await setupDbService.setupDbModule()
-      await setupDbService.setupDbConfig()
-      await setupDbService.setupModel()
-      await setupDbService.importModule({})
-    }
-
+    await setupDbService.setup()
     return
   } catch (error) {
     console.error('An error occurred during initialization:', error)
@@ -60,5 +53,5 @@ export async function initialization() {
 export async function test() {
   const setup = new SetupDbService(ora())
 
-  await setup.installPackages(['@nestjs/typeorm', 'typeorm'])
+  // await setup.setupScript()
 }

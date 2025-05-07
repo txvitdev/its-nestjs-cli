@@ -31,8 +31,8 @@ export const dataSourceOptions: DataSourceOptions = {
   logging: false,
   migrations:
     ENV == 'development'
-      ? ['dist/src/config/**/migrations/*{.ts,.js}']
-      : ['src/config/**/migrations/*{.ts,.js}'],
+      ? ['dist/src/database/**/migrations/*{.ts,.js}']
+      : ['src/database/**/migrations/*{.ts,.js}'],
   synchronize: false,
   ...sslConfig,
 }

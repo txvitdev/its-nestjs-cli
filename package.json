@@ -2,6 +2,8 @@
   "name": "its-nestjs-cli",
   "version": "1.0.0",
   "description": "Its nestjs cli",
+  "author": "Jasper (aka TXV)",
+  "license": "MIT",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -14,13 +16,15 @@
   "bin": {
     "its-cli": "./dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
   "keywords": [],
-  "author": "Jasper (aka TXV)",
-  "license": "ISC",
   "dependencies": {
     "chalk": "^5.4.1",
     "child_process": "^1.0.2",
     "commander": "^13.1.0",
+    "edit-json-file": "^1.8.1",
     "execa": "^9.5.2",
     "fs-extra": "^11.3.0",
     "glob": "^11.0.2",
@@ -30,6 +34,7 @@
     "ts-morph": "^25.0.1"
   },
   "devDependencies": {
+    "@types/edit-json-file": "^1.7.3",
     "@types/fs-extra": "^11.0.4",
     "@types/inquirer": "^9.0.7",
     "@types/node": "^22.15.3",
