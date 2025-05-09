@@ -93,7 +93,7 @@ export class SetupDbService implements ISetupDbService {
 
       await fs.copy(sourceDir, targetDir)
 
-      // Change tail name: from .template to .ts
+      // Remove .template extension from all files in the folder
       const renameExtensions = async (dir) => {
         const entries = await fs.readdir(dir)
         for (const entry of entries) {
@@ -117,36 +117,15 @@ export class SetupDbService implements ISetupDbService {
     }
   }
 
-  protected async setupScript(): Promise<void> {
+  protected async setupScript(scripts?: Record<string, string>): Promise<void> {
     try {
-      const file = editJsonFile(path.join(process.cwd(), 'package.json'))
-      file.set('scripts.typeorm', 'ts-node ./node_modules/typeorm/cli')
-      file.set(
-        'scripts.migration:run',
-        'npm run typeorm migration:run -- -d ./src/database/database.js',
-      )
-      file.set(
-        'scripts.migration:rundev',
-        'npm run typeorm migration:run -- -d ./src/database/database.ts',
-      )
-      file.set(
-        'scripts.migration:generate',
-        'npm run build && cross-var npm run typeorm -- -d ./src/database/database.ts migration:generate ./src/database/migrations/$npm_config_name',
-      )
-      file.set(
-        'scripts.migration:create',
-        'npm run typeorm -- migration:create ./src/database/migrations/$npm_config_name',
-      )
-      file.set(
-        'scripts.migration:revert',
-        'npm run typeorm -- -d ./src/database/database.js migration:revert',
-      )
-      file.set(
-        'scripts.migration:revertdev',
-        'npm run typeorm -- -d ./src/database/database.ts migration:revert',
-      )
-
-      file.save()
+      if (scripts) {
+        const file = editJsonFile(path.join(process.cwd(), 'package.json'))
+        for (const [key, value] of Object.entries(scripts)) {
+          file.set(`scripts.${key}`, value)
+        }
+        file.save()
+      }
     } catch (error) {
       console.error('Error when setting up script: ', error)
     }

@@ -13,8 +13,4 @@ program.command('setup').action(async () => {
   await initialization()
 })
 
-program.command('test').action(async () => {
-  await test()
-})
-
 program.parse(process.argv)

@@ -8,8 +8,23 @@ export class SetupNoSqlService extends SetupDbService {
   }
 
   async setupEnv(): Promise<void> {
-    const variables = ['DB_URL']
+    const variables = [
+      'MONGO_HOST',
+      'MONGO_PORT',
+      'MONGO_USERNAME',
+      'MONGO_PASSWORD',
+      'MONGO_DATABASE',
+    ]
     await super.setupEnv(variables)
+  }
+
+  async setupDbFolder(): Promise<void> {
+    const sourceDir = path.join(Dirname, 'template/database/nosql/database')
+    await super.setupDbFolder(sourceDir)
+  }
+
+  async setupScript(): Promise<void> {
+    await super.setupScript()
   }
 
   async setupDbConfig(): Promise<void> {
@@ -21,12 +36,26 @@ export class SetupNoSqlService extends SetupDbService {
     await super.setupDbConfig(configPath)
   }
 
-  async setupDbModule(): Promise<void> {
-    const modulePath = path.join(
-      Dirname,
-      'template/database/nosql/database/database.module.ts.template',
+  async setupModel(): Promise<void> {
+    await super.setupModel(
+      'src/modules/shared/base/base.schema.ts',
+      path.join(
+        Dirname,
+        'template/database/nosql/schemas/base.schema.ts.template',
+      ),
     )
-
-    await super.setupDbModule(modulePath)
+    await super.setupModel(
+      'src/modules/user/schemas/user.schema.ts',
+      path.join(
+        Dirname,
+        'template/database/nosql/schemas/user.schema.ts.template',
+      ),
+    )
+  }
+  async importModule(): Promise<void> {
+    await super.importModule({
+      moduleName: 'DatabaseModule',
+      modulePath: '@app/database/database.module',
+    })
   }
 }

@@ -27,7 +27,22 @@ export class SetupSqlService extends SetupDbService {
   }
 
   async setupScript(): Promise<void> {
-    await super.setupScript()
+    const scripts: Record<string, string> = {
+      typeorm: 'ts-node ./node_modules/typeorm/cli',
+      'migration:run':
+        'npm run typeorm migration:run -- -d ./src/database/database.js',
+      'migration:rundev':
+        'npm run typeorm migration:run -- -d ./src/database/database.ts',
+      'migration:generate':
+        'npm run build && cross-var npm run typeorm -- -d ./src/database/database.ts migration:generate ./src/database/migrations/$npm_config_name',
+      'migration:create':
+        'npm run typeorm -- migration:create ./src/database/migrations/$npm_config_name',
+      'migration:revert':
+        'npm run typeorm -- -d ./src/database/database.js migration:revert',
+      'migration:revertdev':
+        'npm run typeorm -- -d ./src/database/database.ts migration:revert',
+    }
+    await super.setupScript(scripts)
   }
 
   async setupDbConfig(): Promise<void> {
@@ -41,7 +56,7 @@ export class SetupSqlService extends SetupDbService {
 
   async setupModel(): Promise<void> {
     await super.setupModel(
-      'src/modules/base.entity.ts',
+      'src/modules/shared/base/base.entity.ts',
       path.join(
         Dirname,
         'template/database/sql/entities/base.entity.ts.template',

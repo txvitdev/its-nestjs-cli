@@ -1,13 +1,9 @@
-import { BaseEntity } from '@app/modules/base.entity'
-import { PickType } from '@nestjs/mapped-types'
+import { BaseUuidEntity } from '@app/modules/base.entity'
 import { Expose } from 'class-transformer'
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
 
 @Entity('users')
-export class User extends PickType(BaseEntity<User>, [
-  'createdAt',
-  'updatedAt',
-]) {
+export class User extends BaseUuidEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string
 
