@@ -1,0 +1,9 @@
+import databaseConfig from '@app/config/database.config'
+import { Module } from '@nestjs/common'
+import { ConfigModule } from '@nestjs/config'
+import { MongooseModule } from '@nestjs/mongoose'
+
+@Module({
+  imports: [MongooseModule.forRootAsync(databaseConfig.asProvider())],
+})
+export class DatabaseModule {}

@@ -1,8 +1,9 @@
 import chalk from 'chalk'
 import inquirer from 'inquirer'
-import path from 'path'
-import { dirname } from 'path'
-import { fileURLToPath } from 'url'
+import { SetupDbService } from '../services/setup/setup.service'
+import ora from 'ora'
+import { SetupSqlService } from '../services/setup/setup-sql.service'
+import { SetupNoSqlService } from '../services/setup/setup-nosql.service'
 
 export async function initialization() {
   console.log(
@@ -29,20 +30,28 @@ export async function initialization() {
     },
   ])
 
-  const dirname = path.dirname(fileURLToPath(import.meta.url))
+  // const outputPath = path.join(process.cwd(), 'src', 'database')
 
-  console.log(dirname)
+  let setupDbService: SetupDbService
 
-  const outputPath = path.join(process.cwd(), 'src', 'database')
+  const spinner = ora()
+  setupDbService =
+    dbType === 'sql'
+      ? new SetupSqlService(spinner)
+      : new SetupNoSqlService(spinner)
 
-  console.log(outputPath)
-
-  switch (dbType) {
-    case 'sql':
-      break
-    case 'nosql':
-      break
-    default:
-      break
+  try {
+    await setupDbService.setup()
+    return
+  } catch (error) {
+    console.error('An error occurred during initialization:', error)
+    spinner.fail()
+    return
   }
+}
+
+export async function test() {
+  const setup = new SetupDbService(ora())
+
+  // await setup.setupScript()
 }

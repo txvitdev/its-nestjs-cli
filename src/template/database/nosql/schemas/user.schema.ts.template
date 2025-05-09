@@ -1,0 +1,16 @@
+import { Options } from '@app/config/database.config'
+import { BaseEntity } from '@app/modules/shared/base/base.schema'
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
+import { Expose } from 'class-transformer'
+import { HydratedDocument } from 'mongoose'
+
+export type UserDocument = HydratedDocument<User>
+
+@Schema(Options)
+export class User extends BaseEntity {
+  @Expose({ name: 'wallet_address' })
+  @Prop({ required: true })
+  walletAddress: string
+}
+
+export const UserSchema = SchemaFactory.createForClass(User)

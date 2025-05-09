@@ -3,6 +3,8 @@ import { DataSource, DataSourceOptions } from 'typeorm'
 
 dotenvConfig({ path: '.env' })
 
+const ENV = process.env.NODE_ENV
+
 const sslConfig =
   process.env.SSL === 'false' || !process.env.SSL
     ? {}
@@ -22,12 +24,15 @@ export const dataSourceOptions: DataSourceOptions = {
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
-  entities: ['src/**/*.entity{.ts,.js}', 'dist/src/**/*.entity{.ts,.js}'],
+  entities:
+    ENV == 'development'
+      ? ['dist/src/**/*.entity{.ts,.js}']
+      : ['src/**/*.entity{.ts,.js}'],
   logging: false,
-  migrations: [
-    'src/database/migrations/*{.ts,.js}',
-    'dist/src/database/migrations/*{.ts,.js}',
-  ],
+  migrations:
+    ENV == 'development'
+      ? ['dist/src/database/**/migrations/*{.ts,.js}']
+      : ['src/database/**/migrations/*{.ts,.js}'],
   synchronize: false,
   ...sslConfig,
 }

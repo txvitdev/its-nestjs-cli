@@ -2,9 +2,14 @@
   "name": "its-nestjs-cli",
   "version": "1.0.0",
   "description": "Its nestjs cli",
+  "author": "Jasper (aka TXV)",
+  "license": "MIT",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "repository": {
+    "url": "https://github.com/txvitdev/its-nestjs-cli.git"
+  },
   "type": "module",
   "scripts": {
     "build": "tsup",
@@ -14,20 +19,29 @@
   "bin": {
     "its-cli": "./dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
   "keywords": [],
-  "author": "Jasper (aka TXV)",
-  "license": "ISC",
   "dependencies": {
     "chalk": "^5.4.1",
+    "child_process": "^1.0.2",
     "commander": "^13.1.0",
+    "edit-json-file": "^1.8.1",
     "execa": "^9.5.2",
+    "fs-extra": "^11.3.0",
+    "glob": "^11.0.2",
     "inquirer": "^12.6.0",
     "its-nestjs-cli": "file:",
-    "ora": "^8.2.0"
+    "ora": "^8.2.0",
+    "ts-morph": "^25.0.1"
   },
   "devDependencies": {
+    "@types/edit-json-file": "^1.7.3",
+    "@types/fs-extra": "^11.0.4",
     "@types/inquirer": "^9.0.7",
     "@types/node": "^22.15.3",
+    "cpx": "^1.5.0",
     "prettier": "^3.5.3",
     "tsup": "^8.4.0",
     "typescript": "^5.8.3"

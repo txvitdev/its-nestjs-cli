@@ -1,0 +1,39 @@
+import { registerAs } from '@nestjs/config'
+import { MongooseModuleFactoryOptions } from '@nestjs/mongoose'
+import { SchemaOptions } from '@nestjs/mongoose'
+
+export default registerAs('database', (): MongooseModuleFactoryOptions => {
+  const username = process.env.MONGO_USERNAME
+  const password = process.env.MONGO_PASSWORD
+  const host = process.env.MONGO_HOST
+  const port = process.env.MONGO_PORT
+  const database = process.env.MONGO_DATABASE
+
+  const uri = `mongodb://${username}:${password}@${host}:${port}/${database}`
+  return {
+    uri,
+    dbName: database,
+  }
+})
+
+export const Options: SchemaOptions = {
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    transform: function (_, obj: any) {
+      obj.id = obj._id.toString()
+      delete obj._id
+      delete obj.__v
+      return obj
+    },
+  },
+  toObject: {
+    virtuals: true,
+    transform: function (_, obj: any) {
+      obj.id = obj._id.toString()
+      delete obj._id
+      delete obj.__v
+      return obj
+    },
+  },
+}
