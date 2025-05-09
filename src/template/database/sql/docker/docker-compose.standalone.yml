@@ -1,0 +1,58 @@
+x-templates:
+  api: &api
+    image: its-nestjs-api
+    build:
+      context: .
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+    restart: always
+    env_file: .env
+    depends_on:
+      - redis
+      - postgres
+
+services:
+  api:
+    <<: *api
+    expose:
+      - 3333
+    command: sh -c "npm run migration:run && node src/database/seeders/seeder.js && node src/main.js"
+    container_name: api
+
+  # queue:
+  #   <<: *api
+  #   command: sh -c "node src/bull.js"
+  #   container_name: queue
+  #   restart: always
+  #   depends_on:
+  #     - api
+
+  postgres:
+    image: postgres:15.7
+    container_name: postgres
+    restart: always
+    volumes:
+      - ./tmp/postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    expose:
+      - ${DB_PORT:-5432}
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    volumes:
+      - ./tmp/redis-data:/data
+    restart: always
+    expose:
+      - ${REDIS_PORT:-6379}
+
+networks:
+  default:
+    name: its-nestjs-network
+    external: true

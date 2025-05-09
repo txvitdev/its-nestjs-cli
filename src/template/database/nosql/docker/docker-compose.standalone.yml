@@ -1,0 +1,59 @@
+x-templates:
+  api: &api
+    image: its-nestjs-api
+    build:
+      context: .
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+    restart: always
+    env_file: .env
+    depends_on:
+      - redis
+      - mongodb
+
+services:
+  api:
+    <<: *api
+    expose:
+      - 3333
+    command: sh -c "npm run migration:run && node src/database/seeders/seeder.js && node src/main.js"
+    container_name: api
+
+  # queue:
+  #   <<: *api
+  #   command: sh -c "node src/bull.js"
+  #   container_name: queue
+  #   restart: always
+  #   depends_on:
+  #     - api
+
+  mongodb:
+    image: mongo:8-noble
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME:-mongodb}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-its-nestjs}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-its-nestjs}
+    volumes:
+      - ./tmp/mongo-data:/data/db
+      - ./src/database/database.init.js:/docker-entrypoint-initdb.d/database.init.js:ro
+    expose:
+      - ${MONGO_PORT:-27017}
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    volumes:
+      - ./tmp/redis-data:/data
+    restart: always
+    expose:
+      - { REDIS_PORT:-6379 }
+
+networks:
+  default:
+    name: its-nestjs-network
+    external: true

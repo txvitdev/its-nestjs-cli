@@ -77,4 +77,10 @@ export class SetupSqlService extends SetupDbService {
       modulePath: '@app/database/database.module',
     })
   }
+
+  async setupDockerCompose(): Promise<void> {
+    await super.setupDockerCompose(
+      path.join(Dirname, 'template/database/sql/docker'),
+    )
+  }
 }

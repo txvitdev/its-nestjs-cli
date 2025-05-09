@@ -58,4 +58,10 @@ export class SetupNoSqlService extends SetupDbService {
       modulePath: '@app/database/database.module',
     })
   }
+
+  async setupDockerCompose(): Promise<void> {
+    await super.setupDockerCompose(
+      path.join(Dirname, 'template/database/nosql/docker'),
+    )
+  }
 }

@@ -26,6 +26,7 @@ export class SetupDbService implements ISetupDbService {
       await this.setupScript()
       await this.setupModel()
       await this.importModule({})
+      await this.setupDockerCompose()
     }
     return
   }
@@ -208,6 +209,30 @@ export class SetupDbService implements ISetupDbService {
     } catch (error) {
       this.spinner.stop()
       console.error('Error when setting up model: ', error)
+    }
+  }
+
+  protected async setupDockerCompose(sourceDir?: string): Promise<void> {
+    this.spinner.start('Setting up docker-compose file...\n')
+    await delay(500)
+    try {
+      const dockerFiles = fs.readdirSync(sourceDir)
+
+      for (const file of dockerFiles) {
+        const sourcePath = path.join(sourceDir, file)
+        const targetPath = path.join(process.cwd(), file)
+
+        if (fs.existsSync(targetPath)) {
+          console.error(chalk.red(`File ${targetPath} existed!!`))
+          process.exit(1)
+        }
+        fs.copyFileSync(sourcePath, targetPath)
+      }
+      this.spinner.stop()
+      console.log(chalk.green('Updated ./docker-compose.yml'))
+    } catch (error) {
+      this.spinner.stop()
+      console.error('Error when updating docker-compose file: ', error)
     }
   }
 }
