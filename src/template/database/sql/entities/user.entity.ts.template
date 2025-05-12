@@ -1,4 +1,4 @@
-import { BaseUuidEntity } from '@app/modules/base.entity'
+import { BaseUuidEntity } from '@app/modules/shared/base/base.entity'
 import { Expose } from 'class-transformer'
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
 

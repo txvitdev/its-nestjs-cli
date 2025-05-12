@@ -15,12 +15,40 @@ x-templates:
       - mongodb
 
 services:
+  reverse-proxy:
+    image: traefik:v3.4
+    container_name: reverse-proxy
+    command:
+      - --providers.docker
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --providers.docker.exposedbydefault=false
+      - --certificatesresolvers.letsencrypt.acme.email=vutx@iceteasoftware.com
+      - --certificatesresolvers.letsencrypt.acme.storage=/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./acme.json:/acme.json:rw
+
   api:
     <<: *api
     expose:
       - 3333
-    command: sh -c "npm run migration:run && node src/database/seeders/seeder.js && node src/main.js"
+    command: sh -c "node src/main.js"
     container_name: api
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.api.rule=Host(`jasperisme.io.vn`) && PathPrefix(`/api`)'
+      - 'traefik.http.routers.api.entrypoints=websecure'
+      - 'traefik.http.routers.api.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.api.loadbalancer.server.port=3333'
+      - 'traefik.http.middlewares.api-stripprefix.stripprefix.prefixes=/api'
+      - 'traefik.http.middlewares.api-addprefix.addprefix.prefix=/api/v1'
+      - 'traefik.http.routers.api.middlewares=api-stripprefix,api-addprefix'
 
   # queue:
   #   <<: *api
@@ -51,7 +79,7 @@ services:
       - ./tmp/redis-data:/data
     restart: always
     expose:
-      - { REDIS_PORT:-6379 }
+      - ${REDIS_PORT:-6379}
 
 networks:
   default:

@@ -1,8 +1,6 @@
 import path from 'path'
-import fs from 'fs-extra'
 import { SetupDbService } from './setup.service'
 import { Dirname } from '../../utils/utils'
-import chalk from 'chalk'
 
 export class SetupSqlService extends SetupDbService {
   async installPackages(): Promise<boolean> {
@@ -54,20 +52,14 @@ export class SetupSqlService extends SetupDbService {
     )
   }
 
-  async setupModel(): Promise<void> {
-    await super.setupModel(
-      'src/modules/shared/base/base.entity.ts',
-      path.join(
-        Dirname,
-        'template/database/sql/entities/base.entity.ts.template',
-      ),
+  async setupEntityFolder(): Promise<void> {
+    await super.setupEntityFolder(
+      'src/modules/shared/base',
+      path.join(Dirname, 'template/database/sql/shared'),
     )
-    await super.setupModel(
-      'src/modules/user/entities/user.entity.ts',
-      path.join(
-        Dirname,
-        'template/database/sql/entities/user.entity.ts.template',
-      ),
+    await super.setupEntityFolder(
+      'src/modules/user',
+      path.join(Dirname, 'template/database/sql/user'),
     )
   }
 

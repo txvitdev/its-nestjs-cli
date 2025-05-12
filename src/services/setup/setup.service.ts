@@ -24,7 +24,7 @@ export class SetupDbService implements ISetupDbService {
       await this.setupDbConfig()
       await this.setupEnv()
       await this.setupScript()
-      await this.setupModel()
+      await this.setupEntityFolder()
       await this.importModule({})
       await this.setupDockerCompose()
     }
@@ -87,29 +87,7 @@ export class SetupDbService implements ISetupDbService {
     try {
       const targetDir = path.join(process.cwd(), 'src/database')
 
-      if (await fs.pathExists(targetDir)) {
-        console.error(chalk.red(`Folder ${targetDir} existed!!`))
-        process.exit(1)
-      }
-
-      await fs.copy(sourceDir, targetDir)
-
-      // Remove .template extension from all files in the folder
-      const renameExtensions = async (dir) => {
-        const entries = await fs.readdir(dir)
-        for (const entry of entries) {
-          const fullPath = path.join(dir, entry)
-          const stats = await fs.stat(fullPath)
-          if (stats.isDirectory()) {
-            await renameExtensions(fullPath)
-          } else if (entry.endsWith('.template')) {
-            const newName = entry.replace(/\.template$/, '')
-            await fs.rename(fullPath, path.join(dir, newName))
-          }
-        }
-      }
-      await renameExtensions(targetDir)
-
+      await this.copyAndRenameDir(sourceDir, targetDir, true)
       this.spinner.stop()
       console.log(chalk.green('Updated ./src/database folder'))
     } catch (error) {
@@ -195,17 +173,18 @@ export class SetupDbService implements ISetupDbService {
     }
   }
 
-  protected async setupModel(
-    destinationPath?: string,
-    sourcePath?: string,
+  protected async setupEntityFolder(
+    destinationDir?: string,
+    sourceDir?: string,
   ): Promise<void> {
-    this.spinner.start(`Setting up ${destinationPath} ... \n`)
+    this.spinner.start(`Setting up user folder ... \n`)
     await delay(500)
     try {
-      const content = fs.readFileSync(sourcePath, { encoding: 'utf8' })
-      fs.outputFileSync(path.join(process.cwd(), destinationPath), content)
+      const targetDir = path.join(process.cwd(), destinationDir)
+
+      await this.copyAndRenameDir(sourceDir, targetDir)
       this.spinner.stop()
-      console.log(chalk.green(`Updated ${destinationPath}`))
+      console.log(chalk.green(`Updated ${destinationDir} folder`))
     } catch (error) {
       this.spinner.stop()
       console.error('Error when setting up model: ', error)
@@ -229,10 +208,47 @@ export class SetupDbService implements ISetupDbService {
         fs.copyFileSync(sourcePath, targetPath)
       }
       this.spinner.stop()
-      console.log(chalk.green('Updated ./docker-compose.yml'))
+      console.log(
+        chalk.green(
+          'Updated ./docker-compose.local.yml and docker-compose.standalone.yml files',
+        ),
+      )
     } catch (error) {
       this.spinner.stop()
       console.error('Error when updating docker-compose file: ', error)
+    }
+  }
+
+  private async copyAndRenameDir(
+    sourceDir: string,
+    targetDir: string,
+    checkExisted = false,
+  ) {
+    try {
+      if (checkExisted && (await fs.pathExists(targetDir))) {
+        console.error(chalk.red(`Folder ${targetDir} existed!!`))
+        process.exit(1)
+      }
+
+      await fs.copy(sourceDir, targetDir)
+
+      // Remove .template extension from all files in the folder
+      const renameExtensions = async (dir) => {
+        const entries = await fs.readdir(dir)
+        for (const entry of entries) {
+          const fullPath = path.join(dir, entry)
+          const stats = await fs.stat(fullPath)
+          if (stats.isDirectory()) {
+            await renameExtensions(fullPath)
+          } else if (entry.endsWith('.template')) {
+            const newName = entry.replace(/\.template$/, '')
+            await fs.rename(fullPath, path.join(dir, newName))
+          }
+        }
+      }
+      await renameExtensions(targetDir)
+    } catch (error) {
+      throw error
     }
   }
 }

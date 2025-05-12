@@ -36,22 +36,6 @@ export class SetupNoSqlService extends SetupDbService {
     await super.setupDbConfig(configPath)
   }
 
-  async setupModel(): Promise<void> {
-    await super.setupModel(
-      'src/modules/shared/base/base.schema.ts',
-      path.join(
-        Dirname,
-        'template/database/nosql/schemas/base.schema.ts.template',
-      ),
-    )
-    await super.setupModel(
-      'src/modules/user/schemas/user.schema.ts',
-      path.join(
-        Dirname,
-        'template/database/nosql/schemas/user.schema.ts.template',
-      ),
-    )
-  }
   async importModule(): Promise<void> {
     await super.importModule({
       moduleName: 'DatabaseModule',
@@ -62,6 +46,17 @@ export class SetupNoSqlService extends SetupDbService {
   async setupDockerCompose(): Promise<void> {
     await super.setupDockerCompose(
       path.join(Dirname, 'template/database/nosql/docker'),
+    )
+  }
+
+  async setupEntityFolder(): Promise<void> {
+    await super.setupEntityFolder(
+      'src/modules/shared/base',
+      path.join(Dirname, 'template/database/nosql/shared'),
+    )
+    await super.setupEntityFolder(
+      'src/modules/user',
+      path.join(Dirname, 'template/database/nosql/user'),
     )
   }
 }

@@ -9,7 +9,7 @@ export type UserDocument = HydratedDocument<User>
 @Schema(Options)
 export class User extends BaseEntity {
   @Expose({ name: 'wallet_address' })
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true })
   walletAddress: string
 }
 
